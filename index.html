@@ -840,13 +840,14 @@
                     <input type="radio" name="service" id="diagnostic" value="diagnostic" checked>
                     <div class="service-header">
                         <span class="service-title">Diagnostic Visit</span>
-                        <span class="service-price">$95</span>
+                        <span class="service-price">$150</span>
                     </div>
                     <p class="service-description">Full inspection + problem diagnosis</p>
                     <ul class="service-features">
                         <li>Complete equipment check</li>
                         <li>Water chemistry analysis</li>
                         <li>Written repair estimate</li>
+                        <li><strong>$75 credit toward repair</strong></li>
                     </ul>
                 </label>
                 
@@ -854,13 +855,14 @@
                     <input type="radio" name="service" id="emergency" value="emergency">
                     <div class="service-header">
                         <span class="service-title">Emergency Service</span>
-                        <span class="service-price">$145</span>
+                        <span class="service-price">$195</span>
                     </div>
                     <p class="service-description">Priority same-day or next-day</p>
                     <ul class="service-features">
                         <li>24-48 hour response</li>
                         <li>Priority scheduling</li>
                         <li>All diagnostic services included</li>
+                        <li><strong>$75 credit toward repair</strong></li>
                     </ul>
                 </label>
             </div>
@@ -1045,7 +1047,23 @@
     </div>
 
     <script>
-        // Service option selection
+        // ============================================
+        // 🎯 STRIPE PAYMENT LINKS & CAL.COM CONFIG
+        // ============================================
+        
+        const CONFIG = {
+            // Stripe Payment Links
+            DIAGNOSTIC_PAYMENT_LINK: 'https://buy.stripe.com/test_bJe5kEgiwfPQ8tj2pf1ck01',
+            EMERGENCY_PAYMENT_LINK: 'https://buy.stripe.com/test_3cIbJ28Q4bzAaBr4xn1ck02',
+            
+            // Cal.com Links
+            DIAGNOSTIC_CALCOM: 'https://cal.com/raaiin-genesis-szlnvm/pool-service-appointment',
+            EMERGENCY_CALCOM: 'https://cal.com/raaiin-genesis-szlnvm/pool-emergency-service'
+        };
+        
+        // ============================================
+        // Service Option Selection
+        // ============================================
         document.querySelectorAll('.service-option').forEach(option => {
             option.addEventListener('click', function() {
                 document.querySelectorAll('.service-option').forEach(o => o.classList.remove('selected'));
@@ -1057,7 +1075,9 @@
         // Set initial selection
         document.querySelector('.service-option').classList.add('selected');
         
-        // Form submission
+        // ============================================
+        // Form Submission → Stripe Payment
+        // ============================================
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -1068,36 +1088,43 @@
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value,
                 address: document.getElementById('address').value,
-                issue: document.getElementById('issue').value,
-                timestamp: new Date().toISOString()
+                issue: document.getElementById('issue').value || 'No details provided'
             };
             
-            console.log('Form submitted:', formData);
+            // Store booking data for Cal.com pre-fill
+            sessionStorage.setItem('fixmypool_booking', JSON.stringify(formData));
             
-            // In production, send to your backend here
-            // Example: fetch('/api/bookings', { method: 'POST', body: JSON.stringify(formData) })
-            
-            // Show success modal
-            document.getElementById('successModal').classList.add('active');
-            
-            // Reset form
-            this.reset();
-            document.querySelectorAll('.service-option').forEach(o => o.classList.remove('selected'));
-            document.querySelector('.service-option').classList.add('selected');
-        });
-        
-        function closeModal() {
-            document.getElementById('successModal').classList.remove('active');
-        }
-        
-        // Close modal on background click
-        document.getElementById('successModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
+            // Determine which payment link to use
+            let paymentLink;
+            if (formData.service === 'diagnostic') {
+                paymentLink = CONFIG.DIAGNOSTIC_PAYMENT_LINK;
+            } else {
+                paymentLink = CONFIG.EMERGENCY_PAYMENT_LINK;
             }
+            
+            // Add return URL parameter so Stripe redirects to Cal.com after payment
+            const calcomLink = formData.service === 'diagnostic' 
+                ? CONFIG.DIAGNOSTIC_CALCOM 
+                : CONFIG.EMERGENCY_CALCOM;
+            
+            // Add booking details as URL parameters for Cal.com
+            const calcomWithParams = calcomLink + 
+                '?name=' + encodeURIComponent(formData.name) +
+                '&email=' + encodeURIComponent(formData.email);
+            
+            // Redirect to Stripe payment
+            window.location.href = paymentLink + '?client_reference_id=' + encodeURIComponent(JSON.stringify(formData));
+            
+            // Note: After Stripe payment, you'll need to manually configure Stripe to redirect to Cal.com
+            // For now, we'll open Cal.com in a new window as backup
+            setTimeout(() => {
+                window.open(calcomWithParams, '_blank');
+            }, 2000);
         });
         
-        // Smooth scroll for navigation
+        // ============================================
+        // Smooth Scroll Navigation
+        // ============================================
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
