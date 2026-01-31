@@ -6,6 +6,9 @@
     <title>FixMyPool - Pool Repair Tampa Bay | Same-Week Service</title>
     <meta name="description" content="Pool broken? Get a diagnostic visit this week. Book in 60 seconds. Tampa Bay's fastest pool repair service.">
     
+    <!-- Google Maps Places API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCUlRgWlYqUwx3a52SrgxpiJiG2qNH0kVM&libraries=places&callback=initAutocomplete" async defer></script>
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -680,6 +683,43 @@
             text-decoration: underline;
         }
         
+        /* Google Maps Autocomplete Styling */
+        .pac-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            margin-top: 4px;
+            border: 2px solid var(--primary);
+            font-family: 'Inter', sans-serif;
+            z-index: 10000;
+        }
+        
+        .pac-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border: none;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        
+        .pac-item:hover {
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+        }
+        
+        .pac-item-query {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .pac-matched {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .pac-icon {
+            display: none;
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             .hero {
@@ -1060,6 +1100,45 @@
             DIAGNOSTIC_CALCOM: 'https://cal.com/raaiin-genesis-szlnvm/pool-service-appointment',
             EMERGENCY_CALCOM: 'https://cal.com/raaiin-genesis-szlnvm/pool-emergency-service'
         };
+        
+        // ============================================
+        // Google Maps Address Autocomplete
+        // ============================================
+        let autocomplete;
+        
+        function initAutocomplete() {
+            const addressInput = document.getElementById('address');
+            
+            // Create autocomplete object, restricting to Tampa Bay area
+            autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'us' },
+                fields: ['formatted_address', 'address_components', 'geometry']
+            });
+            
+            // Bias results to Tampa Bay area
+            const tampaBayBounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(27.6, -82.8), // Southwest corner
+                new google.maps.LatLng(28.2, -82.3)  // Northeast corner
+            );
+            autocomplete.setBounds(tampaBayBounds);
+            
+            // When user selects an address
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                
+                if (!place.geometry) {
+                    console.log("No details available for input: '" + place.name + "'");
+                    return;
+                }
+                
+                // Set the formatted address
+                addressInput.value = place.formatted_address;
+            });
+        }
+        
+        // Fallback if Google Maps doesn't load
+        window.initAutocomplete = initAutocomplete;
         
         // ============================================
         // Service Option Selection
