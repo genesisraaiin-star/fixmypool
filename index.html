@@ -908,6 +908,22 @@
                         <li><strong>$75 credit toward repair</strong></li>
                     </ul>
                 </label>
+                
+                <label class="service-option" for="poolschool">
+                    <input type="radio" name="service" id="poolschool" value="poolschool">
+                    <div class="service-header">
+                        <span class="service-title">Pool School</span>
+                        <span class="service-price">$275</span>
+                    </div>
+                    <p class="service-description">2-hour hands-on training session</p>
+                    <ul class="service-features">
+                        <li>Water chemistry & balancing</li>
+                        <li>Monthly maintenance schedule</li>
+                        <li>Equipment operation training</li>
+                        <li>Pump, filter, timer & lights</li>
+                        <li>Troubleshooting common issues</li>
+                    </ul>
+                </label>
             </div>
             
             <div class="form-row">
@@ -1098,10 +1114,12 @@
             // Stripe Payment Links
             DIAGNOSTIC_PAYMENT_LINK: 'https://buy.stripe.com/test_bJe5kEgiwfPQ8tj2pf1ck01',
             EMERGENCY_PAYMENT_LINK: 'https://buy.stripe.com/test_3cIbJ28Q4bzAaBr4xn1ck02',
+            POOLSCHOOL_PAYMENT_LINK: 'https://buy.stripe.com/test_fZuaEY5DS6fgeRH1lb1ck03',
             
             // Cal.com Links
             DIAGNOSTIC_CALCOM: 'https://cal.com/raaiin-genesis-szlnvm/pool-service-appointment',
-            EMERGENCY_CALCOM: 'https://cal.com/raaiin-genesis-szlnvm/pool-emergency-service'
+            EMERGENCY_CALCOM: 'https://cal.com/raaiin-genesis-szlnvm/pool-emergency-service',
+            POOLSCHOOL_CALCOM: 'https://cal.com/raaiin-genesis-szlnvm/pool-school'
         };
         
         // ============================================
@@ -1177,19 +1195,19 @@
             sessionStorage.setItem('fixmypool_booking', JSON.stringify(formData));
             
             // Determine which payment link to use
-            let paymentLink;
+            let paymentLink, calcomLink;
             if (formData.service === 'diagnostic') {
                 paymentLink = CONFIG.DIAGNOSTIC_PAYMENT_LINK;
-            } else {
+                calcomLink = CONFIG.DIAGNOSTIC_CALCOM;
+            } else if (formData.service === 'emergency') {
                 paymentLink = CONFIG.EMERGENCY_PAYMENT_LINK;
+                calcomLink = CONFIG.EMERGENCY_CALCOM;
+            } else if (formData.service === 'poolschool') {
+                paymentLink = CONFIG.POOLSCHOOL_PAYMENT_LINK;
+                calcomLink = CONFIG.POOLSCHOOL_CALCOM;
             }
             
             // Add return URL parameter so Stripe redirects to Cal.com after payment
-            const calcomLink = formData.service === 'diagnostic' 
-                ? CONFIG.DIAGNOSTIC_CALCOM 
-                : CONFIG.EMERGENCY_CALCOM;
-            
-            // Add booking details as URL parameters for Cal.com
             const calcomWithParams = calcomLink + 
                 '?name=' + encodeURIComponent(formData.name) +
                 '&email=' + encodeURIComponent(formData.email);
